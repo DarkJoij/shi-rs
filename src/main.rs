@@ -1,5 +1,13 @@
-use sap;
+mod args;
+mod macros;
+mod utils;
 
-fn main() {
-    println!("Hello world!");
+use crate::args::Args;
+use crate::utils::Re;
+
+fn main() -> Re<()> {
+    let args = Args::new()?; // Try `cargo run hehe -test --arg=one`
+    if_debug!(println!("{args}"));
+
+    Ok(())
 }

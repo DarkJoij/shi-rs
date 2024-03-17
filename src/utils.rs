@@ -1,5 +1,11 @@
-use std::fmt::{Display, Formatter, Result};
+use std::fmt::{Display, Formatter, Result as FmtResult};
 
+/// Not RegExp! Shortened from [`Result`]
+pub type Re<T> = Result<T, String>;
+
+// The following code is not used:
+
+/// Made for quick re-setting inner type in [`Rules`].
 type _ST = String;
 
 #[derive(Debug)]
@@ -10,7 +16,7 @@ pub enum Rules {
 }
 
 impl Display for Rules {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "{}", match self {
             Rules::Args(prefix) => format!("Regular arguments starts with \"{prefix}\"."),
             Rules::Flags(prefix) => format!("Important parameters starts with \"{prefix}\"."),

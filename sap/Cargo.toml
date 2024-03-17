@@ -1,8 +1,0 @@
-[package]
-name = "sap"
-version = "0.1.0"
-edition = "2021"
-authors = ["Dallas"]
-description = "A set of tools for `shi-rs`."
-
-[dependencies]
