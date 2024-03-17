@@ -1,0 +1,9 @@
+[package]
+name = "shi-rs"
+version = "0.1.0"
+edition = "2021"
+authors = ["Dallas"]
+description = "Lightweight (cross-platform, in the future) package installer."
+
+[dependencies]
+sap = { path = "./sap" }
