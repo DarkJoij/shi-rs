@@ -24,14 +24,13 @@ pub struct Args {
 impl Args {
     #[allow(clippy::manual_strip)] // TODO: REMOVE ME!
     pub fn new() -> Re<Self> {
-        let inner_args = args();
         let (mut reg, mut flags, mut kwargs) = (
             Vec::new(),
             Vec::new(),
             Vec::new()
         );
 
-        for arg in inner_args.skip(1) {
+        for arg in args().skip(1) {
             if arg.starts_with("--") {
                 let parts = Vec::from_iter(arg.split('=').map(String::from));
 

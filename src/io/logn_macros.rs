@@ -1,4 +1,5 @@
 use crate::if_release;
+use crate::fs::config::Config;
 
 use casual_logger::Log;
 
@@ -40,15 +41,17 @@ macro_rules! fatal {
     }}
 }
 
-pub fn set_up_logger() {
+pub fn set_up_logger(config: &Config) {
     Log::set_retention_days(30);
     Log::set_file_name("shi-rs_journal");
     Log::remove_old_logs();
 
-    if_release! {
-        use casual_logger::{Level, Opt};
+    if config.logging {
+        if_release! {
+            use casual_logger::{Level, Opt};
 
-        Log::set_level(Level::Info);
-        Log::set_opt(Opt::Release);
+            Log::set_level(Level::Info);
+            Log::set_opt(Opt::Release);
+        }
     }
 }

@@ -13,11 +13,10 @@ use casual_logger::Log;
 fn main() -> Re<()> {
     let _args = Args::new()?; // Try `cargo run hehe -test --arg=one`
     let config = read_config()?;
-
-    if config.logging {
-        set_up_logger();
-        info!("Logger connected!");
-    }
+    
+    set_up_logger(&config);
+    info!("Logger connected!");
+    info!("Program stopped with exit code 0.");
 
     Log::flush();
     Ok(())
