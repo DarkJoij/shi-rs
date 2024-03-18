@@ -1,16 +1,32 @@
+use crate::fs::config::{Config, save_config};
+use crate::io::git_enabled;
+use crate::io::logn_macros::set_up_logger;
+
 use serde_json::Error as SerdeJsonError;
 
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
-use std::io::Error as IOError; 
+use std::io::Error as IOError;
 
-/// Made for error compatibility.
+/// Configures the capabilities needed when the program is running.
+pub fn set_up(config: &mut Config) -> Re<()> {
+    set_up_logger(config);
+
+    if git_enabled() && matches!(config.git_enabled, false) {
+        config.git_enabled = true;
+        save_config(config)?;
+    }
+    
+    Ok(())
+}
+
+/// Made for errors compatibility.
 ///
 /// Note
 /// ----
 /// Use only the properties from the
 /// [`Debug`] trait to format this enum.
 pub enum Error {
-    System(String), // Not derives [`Default`] trait.
+    System(String),
     IO(IOError),
     Serde(SerdeJsonError)
 }

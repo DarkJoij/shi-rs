@@ -34,9 +34,7 @@ macro_rules! warn {
 #[macro_export]
 macro_rules! fatal {
     ($($arg:tt)*) => {{
-        let message = &format!($($arg)*);
-
-        casual_logger::Log::fatal(&message);
+        casual_logger::Log::fatal(&format!($($arg)*));
         panic!("unhandled: {}", message);
     }}
 }
@@ -46,7 +44,7 @@ pub fn set_up_logger(config: &Config) {
     Log::set_file_name("shi-rs_journal");
     Log::remove_old_logs();
 
-    if config.logging {
+    if config.logging_enabled {
         if_release! {
             use casual_logger::{Level, Opt};
 
