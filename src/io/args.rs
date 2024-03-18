@@ -1,3 +1,4 @@
+use crate::commands::reprs::Command;
 use crate::err;
 use crate::utils::Re;
 
@@ -13,46 +14,71 @@ pub enum ArgType {
     Kwarg(String, String)
 }
 
+impl ArgType {
+    pub fn unwrap_or(&self, fail_variant: &str) -> String {
+        match self {
+            ArgType::Reg(arg) => arg.to_owned(),
+            ArgType::Flag(arg) => arg.to_owned(),
+            _ => fail_variant.to_owned()
+        }
+    }
+
+    pub fn unwrap_kwarg_or(&self, fail_lvalue: &str, fail_rvalue: &str) -> (String, String) {
+        match self {
+            ArgType::Kwarg(lvalue, rvalue) => (lvalue.to_owned(), rvalue.to_owned()),
+            _ => (fail_lvalue.to_owned(), fail_rvalue.to_owned())
+        }
+    }
+}
+
+impl Display for ArgType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "{}", match self {
+            ArgType::Reg(arg) => arg.to_owned(),
+            ArgType::Flag(arg) => format!("-{arg}"),
+            ArgType::Kwarg(lvalue, rvalue) => format!("--{lvalue}={rvalue}")
+        })
+    }
+}
+
 /// Stores command line arguments according to their types.
 #[derive(Debug)]
 pub struct Args {
-    reg: Vec<ArgType>,
-    flags: Vec<ArgType>,
-    kwargs: Vec<ArgType>
+    pub command: Command,
+    pub inner: Vec<ArgType>
 }
 
 impl Args {
     #[allow(clippy::manual_strip)] // TODO: REMOVE ME!
     pub fn new() -> Re<Self> {
-        let (mut reg, mut flags, mut kwargs) = (
-            Vec::new(),
-            Vec::new(),
-            Vec::new()
-        );
+        let mut inner = Vec::new();
+        let argv: Vec<String> = args().collect();
+        
+        let string_command = match argv.get(1) {
+            Some(string) => string,
+            None => "No command provided."
+        };
+        let command = Command::from(string_command.to_owned())?;
 
-        for arg in args().skip(1) {
-            if arg.starts_with("--") {
+        // It is necessary to sort out the sorting of arguments!
+        for arg in &argv[2..] {
+            let argument = if arg.starts_with("--") {
                 let parts = Vec::from_iter(arg.split('=').map(String::from));
 
                 if parts.len() != 2 {
                     return err!("Invalid keyword argument: {arg}");
                 }
 
-                kwargs.push(ArgType::Kwarg(parts[0][2..].to_owned(), parts[1].to_owned()));
+                ArgType::Kwarg(parts[0][2..].to_owned(), parts[1].to_owned())
             } else if arg.starts_with('-') {
-                flags.push(ArgType::Flag(arg[1..].to_owned()));
+                ArgType::Flag(arg[1..].to_owned())
             } else {
-                reg.push(ArgType::Reg(arg));
+                ArgType::Reg(arg.to_owned())
             };
+
+            inner.push(argument);
         }
 
-        Ok(Args { reg, flags, kwargs })
-    }
-}
-
-#[cfg(debug_assertions)] // TODO: REMOVE ME!
-impl Display for Args {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        <Self as Debug>::fmt(self, f)
+        Ok(Args { command, inner })
     }
 }

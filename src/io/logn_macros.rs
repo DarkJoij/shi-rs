@@ -39,6 +39,7 @@ macro_rules! fatal {
     }}
 }
 
+/// Sets systemically important logger parameters.
 pub fn set_up_logger(config: &Config) {
     Log::set_retention_days(30);
     Log::set_file_name("shi-rs_journal");
