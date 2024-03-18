@@ -10,11 +10,31 @@ macro_rules! if_debug {
     }};
 }
 
+/// Executes passed blocks only
+/// if program runs in `release` mode.
+/// The opposite of [`if_debug`] macro.
+#[macro_export]
+macro_rules! if_release {
+    ($release_block:block else $else_block:block) => {{
+        if !cfg!(debug_assertions) {
+            $release_block
+        } else {
+            $else_block
+        }
+    }};
+    ($($body:tt)*) => {{
+        #[cfg(not(debug_assertions))]
+        {
+            $($body)*
+        }
+    }};
+}
+
 /// Returns [`Result::Err`] with formatted passed string.
 #[macro_export]
 macro_rules! err {
     ($($arg:tt)*) => {
-        Err(format!($($arg)*))
+        Err(crate::utils::Error::System(format!($($arg)*)))
     };
 }
 
@@ -22,6 +42,6 @@ macro_rules! err {
 #[macro_export]
 macro_rules! ok {
     ($($arg:tt)*) => {
-        Ok(format!($($arg)*))
+        Ok(crate::utils::Error::System(format!($($arg)*)))
     };
 }

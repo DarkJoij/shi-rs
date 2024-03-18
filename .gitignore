@@ -1,3 +1,6 @@
 # Folders:
 /.idea
 *target
+
+# Files:
+/config.json
