@@ -13,15 +13,10 @@ impl Executor {
 
     pub fn execute(&self) -> Re<String> {
         let message = match self.args.command {
-            Command::Test => {
-                "Yes, this is test feature.".to_owned()
-            },
-            Command::Greet => {
-                let potential_name = &self.args.inner[0];
-                format!("Hello, {}!", potential_name.unwrap_or("User!"))
-            }
+            // TODO: SAVE CORE INFO IN TOML AND PARSE IT HERE!
+            Command::Verbose => "V.0.24.320"
         };
 
-        Ok(message)
+        Ok(message.to_owned())
     }
 }

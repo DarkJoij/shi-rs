@@ -8,36 +8,70 @@ use std::fmt::{Debug, Display, Formatter, Result};
 /// Represents command line argument
 /// in parsed view with separations.
 #[derive(Debug)]
-pub enum ArgType {
-    Reg(String),
-    Flag(String),
-    Kwarg(String, String)
+pub enum ArgCast {
+    Reg,
+    Force,
+    Flag,
+    Kwarg
 }
 
-impl ArgType {
-    pub fn unwrap_or(&self, fail_variant: &str) -> String {
-        match self {
-            ArgType::Reg(arg) => arg.to_owned(),
-            ArgType::Flag(arg) => arg.to_owned(),
-            _ => fail_variant.to_owned()
-        }
+/// Represents an argument.
+pub struct Arg {
+    cast: ArgCast,  //    cell_1 should be [`Option<String>`]
+    cell_1: String, // <- because of [`Force`] and [`Verbose`] ArgCasts
+    cell_2: Option<String>
+}
+
+impl Arg {
+    #[allow(clippy::manual_strip)] // TODO: REMOVE ME!
+    fn from(value: &str) -> Re<Self> {
+        let (cast, cell_1, cell_2) = if value.starts_with("--") {
+            let parts = Vec::from_iter(value.split('=').map(String::from));
+            let cell_2 = if parts.len() == 2 { Some(parts[1].to_owned()) } else { None };
+
+            if parts.len() > 2 {
+                return err!("Invalid keyword argument: {value}");
+            }
+
+            (ArgCast::Kwarg, parts[0][2..].to_owned(), cell_2)
+        } else if value.starts_with('-') {
+            let cast = match value {
+                "-force" => ArgCast::Force,
+                _ => ArgCast::Flag
+            };
+
+            (cast, value[1..].to_owned(), None)
+        } else {
+            (ArgCast::Reg, value.to_owned(), None)
+        };
+
+        Ok(Arg{ cast, cell_1, cell_2 })
     }
 
-    pub fn unwrap_kwarg_or(&self, fail_lvalue: &str, fail_rvalue: &str) -> (String, String) {
-        match self {
-            ArgType::Kwarg(lvalue, rvalue) => (lvalue.to_owned(), rvalue.to_owned()),
-            _ => (fail_lvalue.to_owned(), fail_rvalue.to_owned())
+    pub fn build_string(&self) -> String {
+        let rvalue = match &self.cell_2 {
+            Some(string) => format!("={string}"),
+            None => String::new()
+        };
+
+        match self.cast {
+            ArgCast::Reg => self.cell_1.clone(),
+            ArgCast::Force => "-force".to_owned(),
+            ArgCast::Flag => format!("-{}", self.cell_1),
+            ArgCast::Kwarg => format!("--{}{}", self.cell_1, rvalue)
         }
     }
 }
 
-impl Display for ArgType {
+impl Debug for Arg {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "{}", match self {
-            ArgType::Reg(arg) => arg.to_owned(),
-            ArgType::Flag(arg) => format!("-{arg}"),
-            ArgType::Kwarg(lvalue, rvalue) => format!("--{lvalue}={rvalue}")
-        })
+        write!(f, "({:?}, {})", self.cast, self.build_string())
+    }
+}
+
+impl Display for Arg {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        f.write_str(&self.build_string())
     }
 }
 
@@ -45,11 +79,10 @@ impl Display for ArgType {
 #[derive(Debug)]
 pub struct Args {
     pub command: Command,
-    pub inner: Vec<ArgType>
+    pub inner: Vec<Arg>
 }
 
 impl Args {
-    #[allow(clippy::manual_strip)] // TODO: REMOVE ME!
     pub fn new() -> Re<Self> {
         let mut inner = Vec::new();
         let argv: Vec<String> = args().collect();
@@ -58,25 +91,11 @@ impl Args {
             Some(string) => string,
             None => "No command provided."
         };
+        println!("{:?}", &argv);
         let command = Command::from(string_command.to_owned())?;
 
-        // It is necessary to sort out the sorting of arguments!
         for arg in &argv[2..] {
-            let argument = if arg.starts_with("--") {
-                let parts = Vec::from_iter(arg.split('=').map(String::from));
-
-                if parts.len() != 2 {
-                    return err!("Invalid keyword argument: {arg}");
-                }
-
-                ArgType::Kwarg(parts[0][2..].to_owned(), parts[1].to_owned())
-            } else if arg.starts_with('-') {
-                ArgType::Flag(arg[1..].to_owned())
-            } else {
-                ArgType::Reg(arg.to_owned())
-            };
-
-            inner.push(argument);
+            inner.push(Arg::from(arg)?);
         }
 
         Ok(Args { command, inner })

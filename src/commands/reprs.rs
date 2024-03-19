@@ -11,16 +11,14 @@ enum _CommandCast {
 /// The enum branches of which are the current "system" commands.
 #[derive(Debug)]
 pub enum Command {
-    Test,
-    Greet,
+    Verbose
 }
 
 impl Command {
     pub fn from(value: String) -> Re<Self> {
         // There could be a lowercase check here...
         let parsed = match value.as_str() {
-            "test" => Command::Test,
-            "greet" => Command::Greet,
+            "-v" | "-verbose" => Command::Verbose,
             _ => return err!("Invalid command: \"{value}\"")
         };
 
@@ -29,19 +27,9 @@ impl Command {
 
     pub fn description(&self) -> String {
         let description = match self {
-            Command::Test => "Greet you.",
-            Command::Greet => "Test feature."
+            Command::Verbose => "Shows core information."
         };
 
         description.to_owned()
-    }
-
-    pub fn aliases(&self) -> Option<Vec<String>> {
-        let aliases = match self {
-            Command::Test => Vec::new(),
-            Command::Greet => vec!["hello".to_owned()]
-        };
-
-        if aliases.is_empty() { None } else { Some(aliases) }
     }
 }
