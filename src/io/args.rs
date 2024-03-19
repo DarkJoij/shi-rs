@@ -12,31 +12,42 @@ pub enum ArgCast {
     Reg,
     Force,
     Flag,
+    AllowGit,
+    AllowLogging,
     Kwarg
 }
 
 /// Represents an argument.
 pub struct Arg {
-    cast: ArgCast,  //    cell_1 should be [`Option<String>`]
-    cell_1: String, // <- because of [`Force`] and [`Verbose`] ArgCasts
-    cell_2: Option<String>
+    pub cast: ArgCast,  //    cell_1 should be [`Option<String>`]
+    pub cell_1: String, // <- because of [`Force`] and [`Verbose`]
+    pub cell_2: Option<String>
 }
 
 impl Arg {
     #[allow(clippy::manual_strip)] // TODO: REMOVE ME!
     fn from(value: &str) -> Re<Self> {
+        // TODO: Might be rewritten because it can be easier 
+        // to automize process if definition casts...
         let (cast, cell_1, cell_2) = if value.starts_with("--") {
             let parts = Vec::from_iter(value.split('=').map(String::from));
-            let cell_2 = if parts.len() == 2 { Some(parts[1].to_owned()) } else { None };
 
             if parts.len() > 2 {
                 return err!("Invalid keyword argument: {value}");
             }
 
-            (ArgCast::Kwarg, parts[0][2..].to_owned(), cell_2)
+            let cell_1 = parts[0][2..].to_owned();
+            let cell_2 = if parts.len() == 2 { Some(parts[1].to_owned()) } else { None };
+            let cast = match cell_1.as_str() {
+                "allow-git" => ArgCast::AllowGit,
+                "allow-logging" => ArgCast::AllowLogging,
+                _ => ArgCast::Kwarg
+            };
+
+            (cast, cell_1, cell_2)
         } else if value.starts_with('-') {
             let cast = match value {
-                "-force" => ArgCast::Force,
+                "-f" | "-force" => ArgCast::Force,
                 _ => ArgCast::Flag
             };
 
@@ -58,7 +69,7 @@ impl Arg {
             ArgCast::Reg => self.cell_1.clone(),
             ArgCast::Force => "-force".to_owned(),
             ArgCast::Flag => format!("-{}", self.cell_1),
-            ArgCast::Kwarg => format!("--{}{}", self.cell_1, rvalue)
+            _ => format!("--{}{}", self.cell_1, rvalue) // TODO: Review all branches.
         }
     }
 }
@@ -91,7 +102,6 @@ impl Args {
             Some(string) => string,
             None => "No command provided."
         };
-        println!("{:?}", &argv);
         let command = Command::from(string_command.to_owned())?;
 
         for arg in &argv[2..] {

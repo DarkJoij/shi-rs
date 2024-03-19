@@ -19,8 +19,8 @@ fn main() -> Re<()> {
     info!("Logger connected!");
     info!("Program stopped with exit code 0.");
 
-    let executor = Executor::new(args); // Try `cargo run -- -v`
-    let result = executor.execute()?;
+    let executor = Executor::new(args); // Try `cargo run -- -s --allow-lalala=true`
+    let result = executor.execute(&mut config)?;
     println!("{result}");
 
     Log::flush();

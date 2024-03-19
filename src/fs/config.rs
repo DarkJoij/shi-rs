@@ -12,8 +12,9 @@ const CONFIG_FILE_NAME: &str = "./config.json";
 /// a high-level wrapper (no need here).
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Config {
-    pub logging_enabled: bool,
-    pub git_enabled: bool
+    pub git_enabled: bool,
+    pub git_allowed: bool,
+    pub logging_allowed: bool
 }
 
 /// Creates a file and returns [`File`] if it does not

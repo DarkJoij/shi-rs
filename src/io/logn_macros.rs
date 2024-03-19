@@ -45,7 +45,7 @@ pub fn set_up_logger(config: &Config) {
     Log::set_file_name("shi-rs_journal");
     Log::remove_old_logs();
 
-    if config.logging_enabled {
+    if config.logging_allowed {
         if_release! {
             use casual_logger::{Level, Opt};
 
